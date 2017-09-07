@@ -6,7 +6,7 @@ Program for converting Ultimate 3000 RSCL ASCII chromatograms to XY data.
 
 This software is released under the [MIT](LICENSE) license.
 
-# Quick Start 
+## Quick Start 
 
 ### Requirements
 
