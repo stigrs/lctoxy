@@ -14,13 +14,20 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <utils.h>
 #include <boost/program_options.hpp>
 #include <exception>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <gsl/gsl>
+#include "utils.h"
+
+// Forward declarations:
+
+void get_mass_data(const std::string& filename,
+                   std::vector<double>& mass,
+                   std::vector<double>& delta_mass);
 
 //
 // Program for converting Ultimate 3000 RSCL ASCII chromatograms to XY data.
@@ -33,8 +40,8 @@ int main(int argc, char* argv[])
     // clang-format off
     options.add_options()
         ("help,h", "display help message")
-        ("mass", po::value<std::string>(), "mass file (*.txt)")
-        ("chrom", po::value<std::string>(), "chromatogram file (*.ascii)");
+        ("mass,m", po::value<std::string>(), "mass file (*.txt)")
+        ("chrom,c", po::value<std::string>(), "chromatogram file (*.ascii)");
     // clang-format on
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, options), vm);
@@ -65,9 +72,44 @@ int main(int argc, char* argv[])
     try {
         std::vector<double> mass;
         std::vector<double> delta_mass;
+
+        get_mass_data(mass_file, mass, delta_mass);
     }
     catch (std::exception& e) {
         std::cerr << "what: " << e.what() << '\n';
         return 1;
     }
+}  // main
+
+void get_mass_data(const std::string& filename,
+                   std::vector<double>& mass,
+                   std::vector<double>& delta_mass)
+{
+    std::ifstream from;
+    fopen(from, filename);
+
+    std::string token;
+    double value;
+
+    if (find_section(from, "mass")) {
+        while (from >> value) {
+            Expects(value > 0.0);
+            mass.push_back(value);
+        }
+    }
+    else {
+        throw std::runtime_error("could not find mass");
+    }
+    if (find_section(from, "delta_mass")) {
+        while (from >> value) {
+            Expects(value > 0.0);
+            delta_mass.push_back(value);
+        }
+    }
+    else {
+        throw std::runtime_error("could not find delta_mass");
+    }
+    Ensures(!mass.empty());
+    Ensures(!delta_mass.empty());
+    Ensures(mass.size() == delta_mass.size());
 }

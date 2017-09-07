@@ -176,36 +176,10 @@ std::ostream& operator<<(std::ostream& to, const Bound_form<T>& bf)
 
 // String methods:
 
-// Derived class for reporting string cast errors.
-struct Bad_from_string : std::runtime_error {
-    Bad_from_string(std::string s) : std::runtime_error(s) {}
-};
-
 // Derived class for handling string find errors.
 struct String_find_error : std::runtime_error {
     String_find_error(std::string s) : runtime_error(s) {}
 };
-
-// Simple convert to string method.
-template <typename T>
-std::string to_string(const T& t)
-{
-    std::ostringstream oss;
-    oss << t;
-    return oss.str();
-}
-
-// Simple extract from string method.
-template <typename T>
-T from_string(const std::string& s)
-{
-    std::istringstream iss(s);
-    T t;
-    if (!(iss >> t)) {
-        throw Bad_from_string("bad cast from string '" + s + "'");
-    }
-    return t;
-}
 
 // Strip suffix from filename.
 inline std::string strip_suffix(const std::string& filename,
