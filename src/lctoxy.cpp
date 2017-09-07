@@ -17,10 +17,10 @@
 #include <boost/program_options.hpp>
 #include <exception>
 #include <fstream>
+#include <gsl/gsl>
 #include <iostream>
 #include <string>
 #include <vector>
-#include <gsl/gsl>
 #include "utils.h"
 
 // Forward declarations:
@@ -97,17 +97,11 @@ void get_mass_data(const std::string& filename,
             mass.push_back(value);
         }
     }
-    else {
-        throw std::runtime_error("could not find mass");
-    }
     if (find_section(from, "delta_mass")) {
         while (from >> value) {
             Expects(value > 0.0);
             delta_mass.push_back(value);
         }
-    }
-    else {
-        throw std::runtime_error("could not find delta_mass");
     }
     Ensures(!mass.empty());
     Ensures(!delta_mass.empty());
