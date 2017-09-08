@@ -51,3 +51,10 @@ into a directory called `lctoxy`.
 4. Install the software:
 
         cmake --build . --config Release --target install
+
+## Usage
+
+Command to run the software:
+
+        lctoxy -m mass_file -c chromatogram_file
+        
