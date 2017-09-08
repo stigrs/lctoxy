@@ -17,7 +17,6 @@
 #ifndef LCTOXY_UTILS_H
 #define LCTOXY_UTILS_H
 
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -25,33 +24,6 @@
 #include <string>
 
 // Stream handling methods:
-
-// Derived class for reporting file opening errors.
-struct Fopen_error : std::runtime_error {
-    Fopen_error(std::string s) : std::runtime_error(s) {}
-};
-
-// Wrapper function for opening file stream for input.
-inline void fopen(std::ifstream& from,
-                  const std::string& filename,
-                  std::ios_base::openmode mode = std::ios_base::in)
-{
-    from.open(filename.c_str(), mode);
-    if (!from.is_open()) {
-        throw Fopen_error("cannot open " + filename);
-    }
-}
-
-// Wrapper function for opening file stream for output.
-inline void fopen(std::ofstream& to,
-                  const std::string& filename,
-                  std::ios_base::openmode mode = std::ios_base::out)
-{
-    to.open(filename.c_str(), mode);
-    if (!to.is_open()) {
-        throw Fopen_error("cannot open " + filename);
-    }
-}
 
 // Find section in input stream.
 inline bool find_section(std::istream& from, const std::string& key)

@@ -29,6 +29,10 @@ void get_mass_data(const std::string& filename,
                    std::vector<double>& mass,
                    std::vector<double>& delta_mass);
 
+void convert(const std::string& filename,
+             const std::vector<double>& mass,
+             const std::vector<double>& delta_mass);
+
 //
 // Program for converting Ultimate 3000 RSCL ASCII chromatograms to XY data.
 //
@@ -74,6 +78,7 @@ int main(int argc, char* argv[])
         std::vector<double> delta_mass;
 
         get_mass_data(mass_file, mass, delta_mass);
+        convert(chrom_file, mass, delta_mass);
     }
     catch (std::exception& e) {
         std::cerr << "what: " << e.what() << '\n';
@@ -85,8 +90,7 @@ void get_mass_data(const std::string& filename,
                    std::vector<double>& mass,
                    std::vector<double>& delta_mass)
 {
-    std::ifstream from;
-    fopen(from, filename);
+    std::ifstream from(filename.c_str());
 
     std::string token;
     double value;
@@ -106,4 +110,68 @@ void get_mass_data(const std::string& filename,
     Ensures(!mass.empty());
     Ensures(!delta_mass.empty());
     Ensures(mass.size() == delta_mass.size());
+}
+
+void convert(const std::string& filename,
+             const std::vector<double>& mass,
+             const std::vector<double>& delta_mass)
+{
+    std::ifstream from(filename.c_str());
+
+    std::string suffix  = get_suffix(filename);
+    std::string outfile = strip_suffix(filename, suffix);
+    Expects(suffix == ".ascii");
+
+    outfile += ".txt";
+    std::ofstream to(outfile.c_str());
+
+    double time;
+    double mi;
+    double yi;
+
+    std::string line;
+    std::string buffer;
+
+    Format<double> gen;
+    gen.width(10);
+
+    to << "Time / min\t";
+    for (std::size_t i = 0; i < mass.size(); ++i) {
+        to << "m/z = " << mass[i] << '\t';
+    }
+    to << '\n';
+
+    while (std::getline(from, line)) {
+        std::vector<double> intensity(mass.size(), 0.0);
+        std::istringstream iss_line(line);
+        std::getline(iss_line, buffer, ',');
+        std::istringstream iss_buffer(buffer);
+        iss_buffer >> time;
+        if (!iss_buffer) {
+            throw std::runtime_error("bad file format, got " + buffer);
+        }
+        for (int i = 0; i < 7; ++i) {
+            std::getline(iss_line, buffer, ',');  // ignore
+        }
+        while (std::getline(iss_line, buffer, ',')) {
+            iss_buffer.clear();
+            iss_buffer.str(buffer);
+            if (iss_buffer >> mi >> yi) {
+                for (std::size_t i = 0; i < mass.size(); ++i) {
+                    if (std::abs(mass[i] - mi) <= delta_mass[i]) {
+                        intensity[i] = yi;
+                    }
+                }
+            }
+            else {
+                throw std::runtime_error("bad file format, got " + buffer);
+            }
+        }
+        to << gen(time) << '\t';
+        for (std::size_t i = 0; i < intensity.size(); ++i) {
+            to << gen(intensity[i]) << '\t';
+        }
+        to << '\n';
+    }
+    std::cout << "Data are written to " << outfile << '\n';
 }
